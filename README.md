@@ -1,0 +1,1 @@
+# SintenedorReactNative
