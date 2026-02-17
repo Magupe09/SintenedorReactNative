@@ -39,9 +39,12 @@ export function CartProvider({ children }) {
       return prevCart.filter((item) => item.id !== productId);
     });
   };
+  const clearCart = () => {
+  setCart([]); // Simplemente ponemos el carrito como un array vacío
+};
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
       {children}
     </CartContext.Provider>
   );

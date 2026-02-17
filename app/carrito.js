@@ -5,21 +5,33 @@ import { supabase } from '../lib/supabase';
 import { router } from 'expo-router';
 
 export default function PantallaCarrito() {
-    
+
     const [nombre, setNombre] = useState('');
     const [telefono, setTelefono] = useState('');
     const [enviando, setEnviando] = useState(false);
 
-    const { cart, addToCart, removeFromCart } = useCart();
+    const { cart, addToCart, removeFromCart, clearCart } = useCart();
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     const enviarPedido = async () => {
-        if (!nombre.trim() || !telefono.trim()) {
-            alert("⚠️ Necesitamos tu nombre y WhatsApp para el envío.");
-            return;
-        }
+        // Expresión regular: Solo números, entre 10 y 15 dígitos
+    const telefonoRegex = /^[0-9]{10,15}$/;
 
+    if (nombre.trim().length < 3) {
+        alert("Por favor, ingresa un nombre real.");
+        return;
+    }
+
+    if (!telefonoRegex.test(telefono)) {
+        alert("Por favor, ingresa un número de WhatsApp válido (10-15 dígitos, solo números).");
+        return;
+    }
+
+    if (cart.length === 0) {
+        alert("El carrito está vacío.");
+        return;
+    }
         setEnviando(true);
         const { error } = await supabase
             .from('orders')
@@ -38,6 +50,9 @@ export default function PantallaCarrito() {
             setEnviando(false);
         } else {
             alert(`¡Excelente ${nombre}! Recibimos tu pedido.`);
+            clearCart();
+            setNombre('');
+            setTelefono('')
             router.replace('/');
         }
     };

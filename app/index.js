@@ -1,41 +1,76 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, FlatList, ActivityIndicator, Pressable } from 'react-native';
 import { supabase } from '../lib/supabase';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router'; // Cambié router por useRouter para mayor consistencia
 import { useCart } from '../context/CartContext';
 
 export default function App() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const { addToCart } = useCart();
+    const router = useRouter();
 
     useEffect(() => {
-        async function getProducts() {
-            const { data } = await supabase.from('products').select('*');
-            if (data) setProducts(data);
-            setLoading(false);
-        }
-        getProducts();
+        // Ejecutamos ambas tareas al cargar
+        verificarPerfilYProductos();
     }, []);
+
+    async function verificarPerfilYProductos() {
+        setLoading(true);
+        
+        // 1. Verificar sesión y perfil
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+            const { data: perfil } = await supabase
+                .from('profiles')
+                .select('phone_number')
+                .eq('id', user.id)
+                .single();
+
+            // Bloqueo de marketing: Si no hay teléfono, a la aduana
+            if (!perfil || !perfil.phone_number) {
+                router.replace('/completar-perfil');
+                return; // Detenemos la ejecución aquí
+            }
+        }
+
+        // 2. Cargar productos
+        const { data: productosData } = await supabase.from('products').select('*');
+        if (productosData) setProducts(productosData);
+        
+        setLoading(false);
+    }
 
     if (loading) {
         return (
-            <View style={styles.center}><ActivityIndicator size="large" color="#ff6600" /></View>
+            <View style={styles.center}>
+                <ActivityIndicator size="large" color="#ff6600" />
+                <Text style={{ marginTop: 10 }}>Cargando menú...</Text>
+            </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>🍕 Mi Dark Kitchen</Text>
+            {/* Barra Superior */}
+            <View style={styles.topBar}>
+                <Text style={styles.logo}>🍕 Pizza App</Text>
+                <Pressable onPress={() => router.push('/login')} style={styles.loginBtn}>
+                    <Text style={styles.loginText}>Mi Cuenta</Text>
+                </Pressable>
+            </View>
+
+            {/* Acceso rápido pedidos */}
             <Link href="/pedidos" asChild>
-                <Pressable style={{ backgroundColor: '#eee', padding: 10, borderRadius: 8, marginBottom: 10 }}>
-                    <Text style={{ textAlign: 'center', fontWeight: 'bold' }}>Ver mis pedidos →</Text>
+                <Pressable style={styles.btnPedidos}>
+                    <Text style={styles.btnPedidosText}>Ver mis pedidos →</Text>
                 </Pressable>
             </Link>
 
             <FlatList
                 data={products}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <View style={styles.card}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -57,15 +92,31 @@ export default function App() {
                         </View>
                     </View>
                 )}
+                ListFooterComponent={
+                    <Pressable onPress={() => router.push('/admin')} style={{ marginTop: 20, padding: 20 }}>
+                        <Text style={{ color: '#aaa', textAlign: 'center' }}>Acceso Admin</Text>
+                    </Pressable>
+                }
             />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8f8f8', paddingTop: 60, paddingHorizontal: 20 },
+    container: { flex: 1, backgroundColor: '#f8f8f8', paddingHorizontal: 20, paddingTop: 20 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    header: { fontSize: 28, fontWeight: 'bold', marginBottom: 20, color: '#333' },
+    topBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 40,
+        marginBottom: 20
+    },
+    logo: { fontSize: 24, fontWeight: 'bold', color: '#333' },
+    loginBtn: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 20 },
+    loginText: { color: '#e74c3c', fontWeight: 'bold' },
+    btnPedidos: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 20, borderWidth: 1, borderColor: '#eee' },
+    btnPedidosText: { textAlign: 'center', fontWeight: 'bold', color: '#333' },
     card: {
         backgroundColor: '#fff', padding: 20, borderRadius: 15,
         marginBottom: 15, elevation: 3, shadowColor: '#000',
@@ -74,32 +125,12 @@ const styles = StyleSheet.create({
     pizzaName: { fontSize: 18, fontWeight: 'bold', color: '#ff6600' },
     description: { fontSize: 14, color: '#666', marginVertical: 5 },
     price: { fontSize: 16, fontWeight: '600', color: '#2ecc71' },
-    
     tag: {
-        backgroundColor: '#ffeaa7',
-        color: '#d35400',
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 5,
-        fontSize: 12,
-        fontWeight: 'bold',
-        overflow: 'hidden'
+        backgroundColor: '#ffeaa7', color: '#d35400',
+        paddingHorizontal: 8, paddingVertical: 2,
+        borderRadius: 5, fontSize: 12, fontWeight: 'bold', overflow: 'hidden'
     },
-    footerCard: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 10
-    },
-    addButton: {
-        backgroundColor: '#ff6600',
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 10,
-    },
-    addButtonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 14
-    }
+    footerCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
+    addButton: { backgroundColor: '#ff6600', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 10 },
+    addButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 }
 });
