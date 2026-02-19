@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, Pressable, Text, ScrollView, Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useRouter } from 'expo-router';
 
 export default function LoginScreen() {
+  const [session, setSession] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -13,25 +14,47 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
+  const [mensaje, setMensaje] = useState('');
 
+  useEffect(() => {
+    // Revisamos si ya hay alguien logueado al abrir la pantalla
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+  }, []);
   async function handleAuth() {
     setLoading(true);
+    setMensaje(''); // Limpiamos mensajes anteriores
+
     if (isRegistering) {
-      // Registro con metadatos para el Trigger
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
         options: {
           data: { full_name: nombre, phone: telefono }
         }
       });
-      if (error) Alert.alert('Error', error.message);
-      else Alert.alert('Éxito', 'Cuenta creada. Revisa tu email.');
+
+      if (error) {
+        // CAPTURA DE CORREO EXISTENTE
+        if (error.message.includes("already registered") || error.status === 422) {
+          setMensaje("⚠️ Este correo ya está registrado. Intenta iniciar sesión.");
+        } else {
+          setMensaje("❌ " + error.message);
+        }
+      } else {
+        // CASO EXITOSO
+        if (data.user && data.session) {
+          setMensaje("✅ ¡Registro exitoso! Entrando...");
+          // El RootLayout se encargará de redirigir
+        } else {
+          setMensaje("📧 Registrado. ¡Revisa tu email para confirmar!");
+        }
+      }
     } else {
-      // Login simple
+      // Lógica de Login (SignIn)
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) Alert.alert('Error', error.message);
-      else router.replace('/');
+      if (error) setMensaje("❌ Credenciales incorrectas");
     }
     setLoading(false);
   }
@@ -44,41 +67,63 @@ export default function LoginScreen() {
     if (error) Alert.alert('Error Google', error.message);
   }
 
+  async function cerrarSesion() {
+    const { error } = await supabase.auth.signOut();
+    if (error) Alert.alert("Error", error.message);
+    // No necesitas redireccionar manualmente, el RootLayout lo hará por ti
+  }
+
+  // SI HAY SESIÓN: Mostramos el botón de salir
+  if (session) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Mi Cuenta</Text>
+        <Text style={{ textAlign: 'center', marginBottom: 20 }}>
+          Sesión iniciada como: {session.user.email}
+        </Text>
+
+        <Pressable style={styles.btnPrincipal} onPress={cerrarSesion}>
+          <Text style={styles.btnText}>Cerrar Sesión</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>{isRegistering ? 'Crear Perfil' : 'Bienvenido'}</Text>
 
       {isRegistering && (
         <>
-          <TextInput 
-            style={styles.input} 
-            placeholder="Nombre Completo *" 
-            value={nombre} 
-            onChangeText={setNombre} 
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre Completo *"
+            value={nombre}
+            onChangeText={setNombre}
           />
-          <TextInput 
-            style={styles.input} 
-            placeholder="Teléfono (WhatsApp) *" 
-            value={telefono} 
-            onChangeText={setTelefono} 
+          <TextInput
+            style={styles.input}
+            placeholder="Teléfono (WhatsApp) *"
+            value={telefono}
+            onChangeText={setTelefono}
             keyboardType="phone-pad"
           />
         </>
       )}
 
-      <TextInput 
-        style={styles.input} 
-        placeholder="Email" 
-        value={email} 
-        onChangeText={setEmail} 
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
         autoCapitalize="none"
       />
-      <TextInput 
-        style={styles.input} 
-        placeholder="Contraseña" 
-        value={password} 
-        onChangeText={setPassword} 
-        secureTextEntry 
+      <TextInput
+        style={styles.input}
+        placeholder="Contraseña"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
       />
 
       <Pressable style={styles.btnPrincipal} onPress={handleAuth} disabled={loading}>
@@ -96,7 +141,7 @@ export default function LoginScreen() {
       <Pressable style={styles.btnGoogle} onPress={loginConGoogle}>
         <Text style={styles.btnTextGoogle}>G Google</Text>
       </Pressable>
-
+       {mensaje ? <Text style={{ color: 'red', textAlign: 'center' }}>{mensaje}</Text> : null}
       <Pressable style={styles.switchBtn} onPress={() => setIsRegistering(!isRegistering)}>
         <Text style={styles.switchText}>
           {isRegistering ? '¿Ya tienes cuenta? Entra aquí' : '¿Nuevo? Crea tu perfil aquí'}

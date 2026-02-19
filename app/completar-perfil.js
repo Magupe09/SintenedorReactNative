@@ -11,13 +11,21 @@ export default function CompletarPerfil() {
   const router = useRouter();
 
   async function guardarPerfil() {
-    if (!nombre || !telefono || !barrio) {
-      Alert.alert("Datos obligatorios", "Por favor, completa todos los campos para continuar.");
+  if (!nombre || !telefono || !barrio) {
+    Alert.alert("Datos obligatorios", "Por favor, completa todos los campos.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error("Error de auth:", authError);
       return;
     }
 
-    setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    console.log("Intentando actualizar perfil para:", user.id);
 
     const { error } = await supabase
       .from('profiles')
@@ -25,17 +33,23 @@ export default function CompletarPerfil() {
         full_name: nombre,
         phone_number: telefono,
         neighborhood: barrio,
+        // IMPORTANTE: No envíes el email aquí si ya existe en la base de datos
       })
       .eq('id', user.id);
 
     if (error) {
-      Alert.alert("Error", "No pudimos guardar tus datos: " + error.message);
+      console.error("Error de Supabase:", error.message);
+      Alert.alert("Error", error.message);
     } else {
-      Alert.alert("¡Todo listo!", "Ya puedes disfrutar de nuestras pizzas.");
-      router.replace('/'); // Volvemos al inicio ya con los datos cargados
+      console.log("Perfil actualizado con éxito");
+      router.replace('/'); 
     }
+  } catch (err) {
+    console.error("Error inesperado:", err);
+  } finally {
     setLoading(false);
   }
+}
 
   return (
     <View style={styles.container}>
