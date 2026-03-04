@@ -61,12 +61,7 @@ export default function App() {
                 </Pressable>
             </View>
 
-            {/* Acceso rápido pedidos */}
-            <Link href="/pedidos" asChild>
-                <Pressable style={styles.btnPedidos}>
-                    <Text style={styles.btnPedidosText}>Ver mis pedidos →</Text>
-                </Pressable>
-            </Link>
+           
 
             <FlatList
                 data={products}

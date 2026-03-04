@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, Pressable, Text, ScrollView, Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 
 export default function LoginScreen() {
   const [session, setSession] = useState(null);
@@ -81,6 +81,12 @@ export default function LoginScreen() {
         <Text style={{ textAlign: 'center', marginBottom: 20 }}>
           Sesión iniciada como: {session.user.email}
         </Text>
+        {/* Acceso rápido pedidos */}
+        <Link href="/pedidos" asChild>
+          <Pressable style={styles.btnPedidos}>
+            <Text style={styles.btnPedidosText}>Ver mis pedidos →</Text>
+          </Pressable>
+        </Link>
 
         <Pressable style={styles.btnPrincipal} onPress={cerrarSesion}>
           <Text style={styles.btnText}>Cerrar Sesión</Text>
@@ -141,7 +147,7 @@ export default function LoginScreen() {
       <Pressable style={styles.btnGoogle} onPress={loginConGoogle}>
         <Text style={styles.btnTextGoogle}>G Google</Text>
       </Pressable>
-       {mensaje ? <Text style={{ color: 'red', textAlign: 'center' }}>{mensaje}</Text> : null}
+      {mensaje ? <Text style={{ color: 'red', textAlign: 'center' }}>{mensaje}</Text> : null}
       <Pressable style={styles.switchBtn} onPress={() => setIsRegistering(!isRegistering)}>
         <Text style={styles.switchText}>
           {isRegistering ? '¿Ya tienes cuenta? Entra aquí' : '¿Nuevo? Crea tu perfil aquí'}
