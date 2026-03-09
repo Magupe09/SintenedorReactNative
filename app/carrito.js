@@ -36,7 +36,8 @@ export default function PantallaCarrito() {
         const { error } = await supabase
             .from('orders')
             .insert([
-                {
+                {   
+                    profile_id: user.id,
                     customer_name: nombre,
                     customer_phone: telefono,
                     total_amount: total,
