@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, TextInput, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
@@ -8,9 +8,18 @@ export default function PantallaCarrito() {
 
     const [nombre, setNombre] = useState('');
     const [telefono, setTelefono] = useState('');
+    const [user, setUser] = useState(null);
     const [enviando, setEnviando] = useState(false);
 
     const { cart, addToCart, removeFromCart, clearCart } = useCart();
+
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        getUser();
+    }, []);
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
