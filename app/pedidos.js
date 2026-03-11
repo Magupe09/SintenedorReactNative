@@ -101,9 +101,22 @@ export default function Pedidos() {
       <Text style={styles.customerInfo}>👤 {item.customer_name}</Text>
       <Text style={styles.customerInfo}>📱 {item.customer_phone}</Text>
 
+      {/* Dirección de entrega */}
+      {item.delivery_address && (
+        <Text style={styles.customerInfo}>📍 {item.delivery_address}</Text>
+      )}
+
       {/* Pizzas ordenadas */}
       <Text style={styles.label}>🍕 Pizzas:</Text>
       <Text style={styles.pizzasText}>{item.pizza_details}</Text>
+
+      {/* Notas especiales */}
+      {item.notes && (
+        <>
+          <Text style={styles.label}>📝 Notas:</Text>
+          <Text style={styles.notasText}>{item.notes}</Text>
+        </>
+      )}
 
       {/* Total */}
       <Text style={styles.total}>💰 Total: ${item.total_amount}</Text>
@@ -208,6 +221,13 @@ const styles = StyleSheet.create({
     color: '#666',
     marginLeft: 5,
     fontStyle: 'italic',
+  },
+  notasText: {
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 5,
+    fontStyle: 'italic',
+    marginBottom: 8,
   },
   total: {
     fontSize: 16,

@@ -122,12 +122,28 @@ export default function LoginScreen() {
           setMensaje("❌ " + error.message);
         }
       } else {
-        // CASO EXITOSO
-        if (data.user && data.session) {
-          setMensaje("✅ ¡Registro exitoso! Entrando...");
-          // El RootLayout se encargará de redirigir
-        } else {
-          setMensaje("📧 Registrado. ¡Revisa tu email para confirmar!");
+        // CASO EXITOSO - Ahora creamos el perfil en la tabla profiles
+        if (data.user) {
+          // Insertamos en la tabla profiles con los datos del usuario
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: data.user.id,
+                full_name: nombre,
+                phone: telefono,
+                avatar_url: null
+              }
+            ]);
+
+          if (profileError) {
+            console.log('Error al crear perfil:', profileError);
+            setMensaje("⚠️ Perfil creado pero hubo un error al guardar datos. Intenta editar tu perfil.");
+          } else if (data.session) {
+            setMensaje("✅ ¡Registro exitoso! Entrando...");
+          } else {
+            setMensaje("📧 Registrado. ¡Revisa tu email para confirmar!");
+          }
         }
       }
     } else {

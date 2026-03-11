@@ -8,6 +8,8 @@ export default function PantallaCarrito() {
 
     const [nombre, setNombre] = useState('');
     const [telefono, setTelefono] = useState('');
+    const [direccion, setDireccion] = useState('');
+    const [notas, setNotas] = useState('');
     const [user, setUser] = useState(null);
     const [enviando, setEnviando] = useState(false);
 
@@ -25,22 +27,28 @@ export default function PantallaCarrito() {
 
     const enviarPedido = async () => {
         // Expresión regular: Solo números, entre 10 y 15 dígitos
-    const telefonoRegex = /^[0-9]{10,15}$/;
+        const telefonoRegex = /^[0-9]{10,15}$/;
 
-    if (nombre.trim().length < 3) {
-        alert("Por favor, ingresa un nombre real.");
-        return;
-    }
+        if (nombre.trim().length < 3) {
+            alert("Por favor, ingresa un nombre real.");
+            return;
+        }
 
-    if (!telefonoRegex.test(telefono)) {
-        alert("Por favor, ingresa un número de WhatsApp válido (10-15 dígitos, solo números).");
-        return;
-    }
+        if (!telefonoRegex.test(telefono)) {
+            alert("Por favor, ingresa un número de WhatsApp válido (10-15 dígitos, solo números).");
+            return;
+        }
 
-    if (cart.length === 0) {
-        alert("El carrito está vacío.");
-        return;
-    }
+        if (direccion.trim().length < 5) {
+            alert("Por favor, ingresa una dirección válida.");
+            return;
+        }
+
+        if (cart.length === 0) {
+            alert("El carrito está vacío.");
+            return;
+        }
+
         setEnviando(true);
         const { error } = await supabase
             .from('orders')
@@ -49,6 +57,8 @@ export default function PantallaCarrito() {
                     profile_id: user.id,
                     customer_name: nombre,
                     customer_phone: telefono,
+                    delivery_address: direccion,
+                    notes: notas || null,
                     total_amount: total,
                     status: 'pending',
                     pizza_details: cart.map(p => p.name).join(', ')
@@ -62,7 +72,9 @@ export default function PantallaCarrito() {
             alert(`¡Excelente ${nombre}! Recibimos tu pedido.`);
             clearCart();
             setNombre('');
-            setTelefono('')
+            setTelefono('');
+            setDireccion('');
+            setNotas('');
             router.replace('/');
         }
     };
@@ -134,6 +146,26 @@ export default function PantallaCarrito() {
                         value={telefono}
                         onChangeText={(text) => setTelefono(text.replace(/[^0-9]/g, ''))}
                     />
+
+                    <Text style={styles.label}>📍 Dirección de entrega</Text>
+                    <TextInput
+                        style={[styles.input, styles.textAreaInput]}
+                        placeholder="Ej. Calle 10 #25-50, Apto 301"
+                        multiline
+                        numberOfLines={3}
+                        value={direccion}
+                        onChangeText={setDireccion}
+                    />
+
+                    <Text style={styles.label}>📝 Notas especiales (opcional)</Text>
+                    <TextInput
+                        style={[styles.input, styles.textAreaInput]}
+                        placeholder="Ej. Sin cebolla, extra queso, etc."
+                        multiline
+                        numberOfLines={2}
+                        value={notas}
+                        onChangeText={setNotas}
+                    />
                 </View>
 
                 <Pressable
@@ -185,6 +217,10 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         marginBottom: 15
+    },
+    textAreaInput: {
+        minHeight: 80,
+        textAlignVertical: 'top',
     },
     confirmButton: { backgroundColor: '#ff6600', padding: 18, borderRadius: 12, alignItems: 'center' },
     buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
