@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "MyDarkKitchen",
-    "slug": "MyDarkKitchen",
+    "name": "KioskoApp",
+    "slug": "kiosko-app",
     "version": "1.0.0",
     "scheme": "tu-app-pizzas",
     "orientation": "portrait",
