@@ -1,6 +1,5 @@
-import { View, Text, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, typography, spacing } from '../src/theme';
-import { useState } from 'react';
 import { TextInput } from 'react-native';
 import { useForm } from 'react-hook-form';
 /**
@@ -12,9 +11,11 @@ import { useForm } from 'react-hook-form';
 export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [contador, setContador] = useState(0);
-  const { register, setValue } = useForm();
-  console.log('contador:', contador);
-
+  const { register, handleSubmit } = useForm();
+  
+  const onLogin = (data: any) => {
+    console.log('data:', data);
+  }
   return (
     
     <View style={styles.container}>
@@ -42,58 +43,22 @@ export default function HomeScreen() {
         secureTextEntry
       />
       <Pressable
-        onPress={() => {
-          setContador((prev) => prev + 1);
-          console.log('Contador incrementado');
-        }}
         style={{
           marginTop: spacing.lg,
           padding: spacing.sm,
           backgroundColor: colors.primary,
           borderRadius: 4,
         }}
-      >
-        <Text>Incrementar Contador</Text>
-      </Pressable>
-      <Pressable
         onPress={() => {
-          setContador((prev) => (prev > 0 ? prev - 1 : 0));
-          console.log('Contador decrementado');
-        }}
-        style={{
-          marginTop: spacing.lg,
-          padding: spacing.sm,
-          backgroundColor: colors.primary,
-          borderRadius: 4,
+          handleSubmit(onLogin)();
         }}
       >
-        <Text>Decrementar Contador</Text>
+        <Text>Enviar form</Text>
       </Pressable>
       
-      <Text key={contador}>Contador: {contador}</Text>
-      <Text style={styles.title}>Kiosko.app</Text>
-      <Text style={styles.subtitle}>Lienzo limpio. Listo para construir.</Text>
-      {isLoading ? 
-        <ActivityIndicator
-          size="small"
-          color={colors.primary}
-          style={{ marginTop: spacing.lg }}
-      /> : <Text style={{ marginTop: spacing.lg, color: colors.primary }}>
-          Cargando...
-        </Text>
-      }
-      <Pressable
-        onPress={() => setIsLoading(!isLoading)}
-        style={{
-          marginTop: spacing.lg,
-          padding: spacing.sm,
-          backgroundColor: colors.primary,
-          borderRadius: 4,
-        }}
-      >
-        <Text>{isLoading ? 'Detener Carga' : 'Iniciar Carga'}</Text>
-      </Pressable>
-      
+       
+    
+   
     </View>
   );
 }
