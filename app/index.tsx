@@ -1,6 +1,5 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { colors, typography, spacing } from '../src/theme';
-import { TextInput } from 'react-native';
 import { useForm } from 'react-hook-form';
 /**
  * 🏠 Pantalla de inicio — placeholder
@@ -9,15 +8,15 @@ import { useForm } from 'react-hook-form';
  * Sesión 1: Reemplazamos por el login.
  */
 export default function HomeScreen() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [contador, setContador] = useState(0);
-  const { register, handleSubmit } = useForm();
-  
+  //const [isLoading, setIsLoading] = useState(false);
+
+  const { register, handleSubmit, formState: { errors } } = useForm();
+
   const onLogin = (data: any) => {
     console.log('data:', data);
   }
   return (
-    
+
     <View style={styles.container}>
       <Text style={styles.emoji}>🏍️</Text>
       <TextInput
@@ -29,8 +28,10 @@ export default function HomeScreen() {
           borderRadius: 4,
         }}
         placeholder="correo"
-        {...register('email')}
+        {...register('email', { required:'Email is required' })}
       />
+      {errors.email && <Text style={{ color: 'red' }}>{errors.email.message as string}</Text>}
+     
       <TextInput
         style={{
           marginTop: spacing.lg,
@@ -39,9 +40,10 @@ export default function HomeScreen() {
           borderRadius: 4,
         }}
         placeholder="contraseña"
-        {...register('password')}
+        {...register('password', {required: 'Password is required' , minLength: { value: 6, message: 'Password must be at least 6 characters' } })}
         secureTextEntry
       />
+      {errors.password && <Text style={{ color: 'red' }}>{errors.password.message as string}</Text>}
       <Pressable
         style={{
           marginTop: spacing.lg,
@@ -55,10 +57,10 @@ export default function HomeScreen() {
       >
         <Text>Enviar form</Text>
       </Pressable>
-      
-       
-    
-   
+
+
+
+
     </View>
   );
 }
