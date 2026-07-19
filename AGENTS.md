@@ -1,0 +1,1 @@
+Busca el archivo .constitucion-mentor.md en base en ello enseñame a crear esta plataforma con las tecnologias incluidas
